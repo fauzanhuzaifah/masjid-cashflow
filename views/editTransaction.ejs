@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Transaksi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5" style="max-width: 600px;">
+        <div class="card shadow">
+            <div class="card-header bg-warning">
+                <h4 class="mb-0">Edit Transaksi</h4>
+            </div>
+            <div class="card-body">
+                <form action="/transaction/update/<%= transaction.id %>" method="POST">
+                    <div class="mb-3">
+                        <label>Tanggal</label>
+                        <!-- Format date untuk input type date (YYYY-MM-DD) -->
+                        <input type="date" name="date" class="form-control" 
+                            value="<%= new Date(transaction.date).toISOString().split('T')[0] %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Nama Pemberi Dana / Donatur</label>
+                        <input type="text" name="donor_name" class="form-control" value="<%= transaction.donor_name %>">
+                    </div>
+                    <div class="mb-3">
+                        <label>Kategori</label>
+                        <select name="category_id" class="form-select" required>
+                            <optgroup label="Pemasukan">
+                                <% categories.forEach(cat => { %>
+                                    <% if (cat.type === 'income') { %>
+                                        <option value="<%= cat.id %>" <%= cat.id == transaction.category_id ? 'selected' : '' %>>
+                                            <%= cat.name %>
+                                        </option>
+                                    <% } %>
+                                <% }) %>
+                            </optgroup>
+                            <optgroup label="Pengeluaran">
+                                <% categories.forEach(cat => { %>
+                                    <% if (cat.type === 'expense') { %>
+                                        <option value="<%= cat.id %>" <%= cat.id == transaction.category_id ? 'selected' : '' %>>
+                                            <%= cat.name %>
+                                        </option>
+                                    <% } %>
+                                <% }) %>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Jumlah (¥)</label>
+                        <input type="number" name="amount" class="form-control" value="<%= transaction.amount %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Keterangan</label>
+                        <textarea name="description" class="form-control"><%= transaction.description %></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">Update Data</button>
+                    <a href="/dashboard" class="btn btn-secondary w-100 mt-2">Batal</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

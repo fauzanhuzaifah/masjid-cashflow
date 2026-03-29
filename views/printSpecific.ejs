@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @page { size: A4 portrait; margin: 1.5cm; }
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
+        @media print { .no-print { display: none; } }
+        @media screen {
+            body { background-color: #eee; padding: 20px; }
+            .paper { background-color: #fff; width: 21cm; min-height: 29.7cm; margin: 0 auto; padding: 2cm; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 6px; text-align: left; }
+        th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .header-report { text-align: center; margin-bottom: 30px; }
+        .header-report h3 { margin: 0; font-weight: bold; text-decoration: underline; }
+        .footer-sign { margin-top: 50px; width: 50%; float: right; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="paper">
+    <div class="header-report">
+        <h3>LAPORAN <%= categoryInfo.type === 'income' ? 'PEMASUKAN' : 'PENGELUARAN' %></h3>
+        <h4><%= categoryInfo.name.toUpperCase() %></h4>
+        <p>Periode : <%= monthName %> <%= year %></p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">No</th>
+                <th width="12%">Tanggal</th>
+                <% if (categoryInfo.type === 'income') { %>
+                    <th width="18%">Nama Donatur</th>
+                <% } %>
+                <th width="15%" class="text-right">Nominal (¥)</th>
+                <th width="25%">Keterangan</th>
+                <th width="15%">Admin Input</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (transactions.length === 0) { %>
+                <tr>
+                    <td colspan="6" class="text-center">Tidak ada data transaksi pada periode ini.</td>
+                </tr>
+            <% } else { %>
+                <% transactions.forEach((trx, index) => { %>
+                    <tr>
+                        <td class="text-center"><%= index + 1 %></td>
+                        <td class="text-center"><%= new Date(trx.date).toLocaleDateString('id-ID') %></td>
+                        <% if (categoryInfo.type === 'income') { %>
+                            <td><%= trx.donor_name || '-' %></td>
+                        <% } %>
+                        <td class="text-right">
+                            <%= Number(trx.amount).toLocaleString('ja-JP') %>
+                        </td>
+                        <td><%= trx.description || '-' %></td>
+                        <td><small><%= trx.admin_name %></small></td>
+                    </tr>
+                <% }); %>
+                
+                <!-- Baris Total -->
+<tr style="font-weight: bold; background-color: #f9f9f9;">
+    <% if (categoryInfo.type === 'income') { %>
+        <td colspan="3" class="text-center">T O T A L (¥)</td>
+    <% } else { %>
+        <td colspan="2" class="text-center">T O T A L (¥)</td>
+    <% } %>
+    <!-- Tambahkan pengecekan 'total || 0' untuk menghindari NaN jika kosong -->
+    <td class="text-right"><%= Number(total || 0).toLocaleString('ja-JP') %></td>
+    <td colspan="2"></td>
+</tr>
+            <% } %>
+        </tbody>
+    </table>
+
+    <!-- BAGIAN TANDA TANGAN (NAMA ADMIN DIHAPUS) -->
+    <div class="footer-sign">
+        <p>Osaka, <%= new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></p>
+        <br><br>
+        <p><u>Imam Masjid Istiqlal Osaka</u></p>
+    </div>
+
+    <div class="no-print mt-5 text-center">
+        <button onclick="window.print()" class="btn btn-primary">Cetak / Save as PDF</button>
+        <a href="/report" class="btn btn-secondary">Kembali</a>
+    </div>
+</div>
+
+</body>
+</html>

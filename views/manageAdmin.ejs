@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kelola Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">Kas Masjid</a>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <h2>Kelola Admin (Super Admin Only)</h2>
+        <a href="/dashboard" class="btn btn-secondary mb-3">Kembali ke Dashboard</a>
+        
+        <!-- BAGIAN BACKUP -->
+        <div class="card border-danger mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Keamanan Data</h5>
+            </div>
+            <div class="card-body">
+                <p>Gunakan fitur ini untuk mengunduh cadangan database secara berkala.</p>
+                <a href="/admin/backup" class="btn btn-danger">Download Backup Database</a>
+            </div>
+        </div>
+
+        <!-- BAGIAN MANAJEMEN USER -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Daftar Pengguna</h5>
+            </div>
+            <div class="card-body">
+                <h5>Tambah Admin Baru</h5>
+                <form action="/admin/add" method="POST">
+                    <div class="row mb-3">
+                        <div class="col-md-3 mb-2">
+                            <input type="text" name="username" class="form-control" placeholder="Username" required>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <input type="password" name="password" class="form-control" placeholder="Password" required>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <select name="role" class="form-control">
+                                <option value="admin">Admin</option>
+                                <option value="super_admin">Super Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button type="submit" class="btn btn-success w-100">Simpan</button>
+                        </div>
+                    </div>
+                </form>
+                <hr>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Status</th> <!-- Kolom Baru -->
+                                <th style="width: 250px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% users.forEach(u => { %>
+                                <tr>
+                                    <td><%= u.id %></td>
+                                    <td><%= u.username %></td>
+                                    <td><%= u.role %></td>
+                                    <td>
+                                        <% if (u.is_active) { %>
+                                            <span class="badge bg-success">Aktif</span>
+                                        <% } else { %>
+                                            <span class="badge bg-secondary">Nonaktif</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (u.id != user.userId) { %>
+                                            <!-- Tombol Reset Password -->
+                                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#resetModal" data-id="<%= u.id %>" data-name="<%= u.username %>">
+                                                Reset Pass
+                                            </button>
+
+                                            <% if (u.is_active) { %>
+                                                <!-- Tombol Nonaktifkan -->
+                                                <form action="/admin/deactivate/<%= u.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Nonaktifkan akun ini?');">
+                                                    <button type="submit" class="btn btn-danger btn-sm">Nonaktifkan</button>
+                                                </form>
+                                            <% } else { %>
+                                                <!-- Tombol Aktifkan Kembali -->
+                                                <form action="/admin/activate/<%= u.id %>" method="POST" style="display:inline;">
+                                                    <button type="submit" class="btn btn-success btn-sm">Aktifkan</button>
+                                                </form>
+                                            <% } %>
+                                          <!-- Tombol Hapus Permanen (Muncul jika Nonaktif) -->
+                                                <% if (!u.is_active) { %>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm mt-1" data-bs-toggle="modal" data-bs-target="#hardDeleteModal" data-id="<%= u.id %>" data-name="<%= u.username %>">
+                                                        Hapus Permanen
+                                                    </button>
+                                                <% } %>
+                                            <% } else { %>
+                                                <span class="text-muted small">Akun Anda</span>
+                                            <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL RESET PASSWORD -->
+    <div class="modal fade" id="resetModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reset Password Admin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="#" method="POST" id="resetForm">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="resetUserId">
+                        <p>Reset password untuk: <strong id="resetUserName"></strong></p>
+                        <div class="mb-3">
+                            <label>Password Baru</label>
+                            <input type="password" name="newPassword" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        var resetModal = document.getElementById('resetModal')
+        resetModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget
+            var userId = button.getAttribute('data-id')
+            var userName = button.getAttribute('data-name')
+            var modalForm = resetModal.querySelector('#resetForm')
+            var modalUserName = resetModal.querySelector('#resetUserName')
+            var modalUserId = resetModal.querySelector('#resetUserId')
+
+            modalUserId.value = userId
+            modalUserName.textContent = userName
+            modalForm.action = '/admin/reset-password/' + userId
+        })
+    </script>
+
+        <!-- MODAL HAPUS PERMANEN -->
+    <div class="modal fade" id="hardDeleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">⚠️ Peringatan Hard Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="#" method="POST" id="hardDeleteForm">
+                    <input type="hidden" name="id" id="hardDeleteUserId">
+                    <div class="modal-body">
+                        <p>Anda akan menghapus <strong id="hardDeleteUserName"></strong> secara PERMANEN.</p>
+                        <div class="alert alert-danger">
+                            <strong>Konsekuensi:</strong>
+                            <ul class="mb-0">
+                                <li>Semua transaksi yang pernah diinput oleh admin ini akan TERHAPUS.</li>
+                                <li>Admin ini tidak bisa dikembalikan.</li>
+                            </ul>
+                        </div>
+                        <div class="mb-3">
+                            <label>Ketik <strong>HAPUS</strong> untuk konfirmasi:</label>
+                            <input type="text" name="confirmation" class="form-control" required placeholder="Ketik HAPUS">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Ya, Hapus Permanen</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Script untuk Modal Hard Delete
+        var hardDeleteModal = document.getElementById('hardDeleteModal')
+        hardDeleteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget
+            var userId = button.getAttribute('data-id')
+            var userName = button.getAttribute('data-name')
+            
+            var form = hardDeleteModal.querySelector('#hardDeleteForm')
+            var nameSpan = hardDeleteModal.querySelector('#hardDeleteUserName')
+            var idInput = hardDeleteModal.querySelector('#hardDeleteUserId')
+
+            nameSpan.textContent = userName
+            idInput.value = userId
+            form.action = '/admin/hard-delete/' + userId
+        })
+    </script>
+</body>
+</html>

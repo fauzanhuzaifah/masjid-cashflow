@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Keuangan Masjid</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .container { width: 100%; max-width: 100%; }
+        }
+        body { background-color: #f4f7f6; }
+        .section-title { border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <% if (!printMode) { %>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 no-print">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">Kas Masjid</a>
+            <div class="d-flex">
+                <a href="/dashboard" class="btn btn-light btn-sm me-2">Dashboard</a>
+                <button onclick="window.print()" class="btn btn-warning btn-sm me-2">Cetak Laporan</button>
+                <a href="/logout" class="btn btn-danger btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <% } %>
+
+    <div class="container mt-4">
+        <!-- Header Laporan -->
+        <div class="text-center mb-4">
+            <h3>LAPORAN KEUANGAN MASJID</h3>
+            <h5>Bulan : <%= ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][selectedMonth - 1] %> <%= selectedYear %></h5>
+        </div>
+
+        <!-- Form Filter (Hanya tampil jika bukan mode cetak) -->
+        <% if (!printMode) { %>
+        <div class="card mb-4 no-print">
+            <div class="card-body">
+                <form action="/report" method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label>Bulan</label>
+                        <select name="month" class="form-select">
+                            <% for(let i=1; i<=12; i++) { %>
+                                <option value="<%= i %>" <%= i == selectedMonth ? 'selected' : '' %>><%= ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"][i-1] %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Tahun</label>
+                        <select name="year" class="form-select">
+                            <% years.forEach(y => { %>
+                                <option value="<%= y %>" <%= y == selectedYear ? 'selected' : '' %>><%= y %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Tampilkan</button>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                         <a href="/report/print?month=<%= selectedMonth %>&year=<%= selectedYear %>" target="_blank" class="btn btn-success w-100">Buka Mode Cetak</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- 1. LAPORAN PENERIMAAN PER JENIS -->
+        <h4 class="section-title text-success">A. Laporan Penerimaan</h4>
+        
+        <% if (Object.keys(groupedIncome).length === 0) { %>
+            <p class="text-muted">Tidak ada data pemasukan pada periode ini.</p>
+        <% } %>
+
+        <% // Loop untuk setiap kategori pemasukan %>
+        <% for (const category in groupedIncome) { %>
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <strong><%= category %></strong>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">No</th>
+                                <th width="15%">Tanggal</th>
+                                <th width="25%">Nama Donatur</th>
+                                <th width="35%">Keterangan</th>
+                                <th width="20%" class="text-end">Jumlah (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% let subtotal = 0; %>
+                            <% groupedIncome[category].forEach((item, index) => { %>
+                                <% subtotal += item.amount; %>
+                                <tr>
+                                    <td><%= index + 1 %></td>
+                                    <td><%= new Date(item.date).toLocaleDateString('id-ID') %></td>
+                                    <td><%= item.donor_name || '-' %></td>
+                                    <td><%= item.description || '-' %></td>
+                                    <td class="text-end"><%= Number(item.amount).toLocaleString('id-ID') %></td>
+                                </tr>
+                            <% }); %>
+                            <tr class="table-success fw-bold">
+                                <td colspan="4" class="text-center">Total <%= category %></td>
+                                <td class="text-end"><%= Number(subtotal).toLocaleString('id-ID') %></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Total Pemasukan Global -->
+        <div class="alert alert-success text-end">
+            <strong>Total Keseluruhan Pemasukan: Rp <%= Number(totalIncome).toLocaleString('id-ID') %></strong>
+        </div>
+
+        <br>
+
+        <!-- 2. LAPORAN PENGELUARAN PER JENIS -->
+        <h4 class="section-title text-danger">B. Laporan Pengeluaran</h4>
+
+        <% if (Object.keys(groupedExpense).length === 0) { %>
+            <p class="text-muted">Tidak ada data pengeluaran pada periode ini.</p>
+        <% } %>
+
+        <% // Loop untuk setiap kategori pengeluaran %>
+        <% for (const category in groupedExpense) { %>
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <strong><%= category %></strong>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">No</th>
+                                <th width="15%">Tanggal</th>
+                                <th width="20%">Nama Penerima</th>
+                                <th width="40%">Keterangan</th>
+                                <th width="20%" class="text-end">Jumlah (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% let subtotalExp = 0; %>
+                            <% groupedExpense[category].forEach((item, index) => { %>
+                                <% subtotalExp += item.amount; %>
+                                <tr>
+                                    <td><%= index + 1 %></td>
+                                    <td><%= new Date(item.date).toLocaleDateString('id-ID') %></td>
+                                    <td><%= item.donor_name || '-' %></td> <!-- Kita pakai donor_name field atau ubah labelnya di logic lain? Untuk simple, biarkan field yang sama atau rename logic di db -->
+                                    <td><%= item.description || '-' %></td>
+                                    <td class="text-end"><%= Number(item.amount).toLocaleString('id-ID') %></td>
+                                </tr>
+                            <% }); %>
+                            <tr class="table-danger fw-bold">
+                                <td colspan="4" class="text-center">Total <%= category %></td>
+                                <td class="text-end"><%= Number(subtotalExp).toLocaleString('id-ID') %></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Total Pengeluaran Global -->
+        <div class="alert alert-danger text-end">
+            <strong>Total Keseluruhan Pengeluaran: Rp <%= Number(totalExpense).toLocaleString('id-ID') %></strong>
+        </div>
+
+        <br>
+
+        <!-- 3. REKAPITULASI SALDO -->
+        <div class="card bg-light">
+            <div class="card-body">
+                <h4 class="text-center mb-3">REKAPITULASI</h4>
+                <table class="table table-bordered">
+                    <tr>
+                        <td>Total Pemasukan</td>
+                        <td class="text-end">Rp <%= Number(totalIncome).toLocaleString('id-ID') %></td>
+                    </tr>
+                    <tr>
+                        <td>Total Pengeluaran</td>
+                        <td class="text-end">Rp <%= Number(totalExpense).toLocaleString('id-ID') %></td>
+                    </tr>
+                    <tr class="table-primary fw-bold">
+                        <td>SALDO AKHIR</td>
+                        <td class="text-end">Rp <%= Number(balance).toLocaleString('id-ID') %></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tanda Tangan -->
+        <div class="row mt-5">
+            <div class="col-md-6 offset-md-6 text-center">
+                <p>Kota, <%= new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) %></p>
+                <br><br><br>
+                <p><strong>Admin Masjid</strong></p>
+                <p><u><%= user.username %></u></p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

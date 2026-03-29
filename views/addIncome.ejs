@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Input Pemasukan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5" style="max-width: 600px;">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Input Pemasukan Baru</h4>
+            </div>
+            <div class="card-body">
+                <form action="/transaction/add" method="POST">
+                    <div class="mb-3">
+                        <label>Tanggal</label>
+                        <input type="date" name="date" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Nama Pemberi Dana / Donatur</label>
+                        <input type="text" name="donor_name" class="form-control" placeholder="Wajib diisi untuk kwitansi">
+                    </div>
+                    <div class="mb-3">
+                        <label>Kategori Pemasukan</label>
+                        <select name="category_id" class="form-select" required>
+                            <% categories.forEach(cat => { %>
+                                <option value="<%= cat.id %>"><%= cat.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Jumlah (¥)</label>
+                        <input type="number" name="amount" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Keterangan</label>
+                        <textarea name="description" class="form-control"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Simpan Pemasukan</button>
+                    <a href="/dashboard" class="btn btn-secondary w-100 mt-2">Batal</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
