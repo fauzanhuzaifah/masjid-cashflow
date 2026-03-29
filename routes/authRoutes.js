@@ -226,9 +226,9 @@ router.post('/admin/hard-delete/:id', requireLogin, requireSuperAdmin, async (re
         await db.query("DELETE FROM users WHERE id = $1", [userId]);
         res.redirect('/admin/manage');
     } catch (err) {
-        console.error(err);
-        res.send("Gagal menghapus permanen.");
-    }
+    console.error('Login error detail:', err);
+    res.status(500).send(`Login error: ${err.message}`);
+}
 });
 
 // Catatan: Satu duplikat route /admin/activate/:id sudah dihapus (hanya satu).
